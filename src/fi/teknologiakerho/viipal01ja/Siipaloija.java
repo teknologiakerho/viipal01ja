@@ -6,7 +6,9 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import fi.teknologiakerho.viipal01ja.hcode.HCode;
@@ -20,6 +22,7 @@ public class Siipaloija {
 	public int cannyKernelSize = 3;
 	public boolean cannyL2Gradient = false;
 	
+	public boolean useBf = true;
 	public int bfD = 7;
 	public double bfSigmaColor = 10, bfSigmaSpace = 10;
 	
@@ -48,9 +51,14 @@ public class Siipaloija {
 		Mat bw = new Mat();
 		Imgproc.cvtColor(src, bw, Imgproc.COLOR_BGR2GRAY);
 
-		System.out.printf("[Siipalointi] Bilateral Filter: d=%d, sigma_r=%f, sigma_d=%f\n",
-				bfD, bfSigmaColor, bfSigmaSpace);
-		Imgproc.bilateralFilter(bw, filtered, bfD, bfSigmaColor, bfSigmaSpace);
+		if(useBf) {
+			System.out.printf("[Siipalointi] Bilateral Filter: d=%d, sigma_r=%f, sigma_d=%f\n",
+					bfD, bfSigmaColor, bfSigmaSpace);
+			Imgproc.bilateralFilter(bw, filtered, bfD, bfSigmaColor, bfSigmaSpace);
+		}else {
+			System.out.println("[Siipalointi] 3x3 gaussian blur");
+			Imgproc.GaussianBlur(bw, filtered, new Size(3, 3), 0);
+		}
 
 		System.out.printf("[Siipalointi] Canny: low=%f, high=%f, %dx%d kernel, L%d norm gradient\n",
 				cannyLowThres, cannyHighThres, cannyKernelSize, cannyKernelSize, cannyL2Gradient ? 2 : 1);
@@ -68,7 +76,7 @@ public class Siipaloija {
 		for(int i=0;i<contours.size();i++) {
 			MatOfPoint c = contours.get(i);
 			c.convertTo(mp2f, CvType.CV_32FC2);
-			Imgproc.approxPolyDP(mp2f, mp2f, apdpEpsilon, true);
+			Imgproc.approxPolyDP(mp2f, mp2f, apdpEpsilon, false);
 			mp2f.convertTo(c, c.type());
 		}
 	}
@@ -78,11 +86,8 @@ public class Siipaloija {
 		Imgproc.drawContours(dest, contours, -1, Scalar.all(0));
 	}
 	
-	public HCode generateHCode(int width, int height, int epsilon) {
-		Path p = Path.fromContours(contours);
-		p.transformCoords(width, height);
-		p.mergeContours(epsilon);
-		return p.toHCode();
+	public ArrayList<MatOfPoint> getContours() {
+		return contours;
 	}
 	
 }

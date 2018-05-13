@@ -5,12 +5,12 @@ import java.awt.Dimension;
 import java.io.File;
 
 import javax.swing.JComponent;
-import javax.swing.JOptionPane;
 
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import fi.teknologiakerho.viipal01ja.IoUtil;
+import fi.teknologiakerho.viipal01ja.Path;
 import fi.teknologiakerho.viipal01ja.Siipaloija;
 import fi.teknologiakerho.viipal01ja.hcode.HCode;
 
@@ -39,6 +39,7 @@ public class Viipal01jaGUI extends JComponent {
 
 		siipaloija.cannyLowThres = siOpt.getCannyLowThres();
 		siipaloija.cannyHighThres = siOpt.getCannyHighThres();
+		siipaloija.useBf = siOpt.getUseBilateralFilter();
 		siipaloija.bfSigmaColor = siOpt.getBFSigmaColor();
 		siipaloija.bfSigmaSpace = siOpt.getBFSigmaSpace();
 		siipaloija.apdpEpsilon = siOpt.getEpsilon();
@@ -67,19 +68,21 @@ public class Viipal01jaGUI extends JComponent {
 	}
 	
 	public HCode generateHCode() {
-		int w = siOpt.getPictureWidth(), h = siOpt.getPictureHeight();
-		if(w == -1 || h == -1) {
-			JOptionPane.showMessageDialog(null, "Give width and height");
-			return null;
-		}
-		
-		int eps = siOpt.getMergeEpsilon();
-		if(eps == -1) {
-			JOptionPane.showMessageDialog(null, "Give epsilon");
-			return null;
-		}
+		Path path = Path.fromContours(siipaloija.getContours());
 
-		return siipaloija.generateHCode(w, h, eps);
+		double w = siOpt.getPictureWidth(), h = siOpt.getPictureHeight();
+		if(w != -1 && h != -1)
+			path.transformCoords(w, h);
+		
+		double eps = siOpt.getMergeEpsilon();
+		if(eps != -1)
+			path.mergeContours(eps);
+		
+		double x = siOpt.getOriginX(), y = siOpt.getOriginY();
+		if(x != -1 && y != -1)
+			path.translate(-x, -y);
+		
+		return path.toHCode();
 	}
 	
 	public void updatePreviewImage() {

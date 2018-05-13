@@ -2,31 +2,33 @@ package fi.teknologiakerho.viipal01ja;
 
 import java.util.ArrayList;
 
+import org.opencv.core.Point;
+
 public class Contour {
 	
 	public Contour next;
 	
-	public ArrayList<Point2i> points;
+	public ArrayList<Point> points;
 	
 	public Contour() {
 		this(new ArrayList<>());
 	}
 	
-	public Contour(ArrayList<Point2i> points) {
+	public Contour(ArrayList<Point> points) {
 		this.points = points;
 	}
 	
-	public Point2i first() {
+	public Point first() {
 		return points.get(0);
 	}
 	
-	public Point2i last() {
+	public Point last() {
 		return points.get(points.size()-1);
 	}
 	
 	public double dist2Undirected(Contour other) {
-		Point2i last = last();
-		return Math.min(last.dist2(other.first()), last.dist2(other.first()));
+		Point last = last();
+		return Math.min(CvUtil.distance2(last, other.first()), CvUtil.distance2(last, other.last()));
 	}
 	
 	public void merge(Contour other) {

@@ -2,9 +2,9 @@ package fi.teknologiakerho.viipal01ja.hcode;
 
 public abstract class PositionCommand extends Command {
 	
-	public int x, y;
+	public double x, y;
 	
-	public PositionCommand(int x, int y) {
+	public PositionCommand(double x, double y) {
 		this.x = x;
 		this.y = y;
 	}

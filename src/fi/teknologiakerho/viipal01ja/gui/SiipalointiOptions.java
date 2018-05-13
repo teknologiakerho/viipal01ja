@@ -1,9 +1,9 @@
 package fi.teknologiakerho.viipal01ja.gui;
 
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagLayout;
 import java.util.function.Consumer;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -17,55 +17,69 @@ public class SiipalointiOptions extends JComponent {
 	private final JSlider bfSigmaColorSlider, bfSigmaSpaceSlider;
 	private final JSlider epsilonSlider;
 	
+	private final JCheckBox bilateralFilterBox;
+	
 	private final JTextField picWidthField, picHeightField;
+	private final JTextField originXField, originYField;
 	private final JTextField mergeEpsilonField;
 
 	public SiipalointiOptions() {
-		GridLayout gl = new GridLayout(0, 2);
-		gl.setHgap(20);
-		gl.setVgap(0);
-		setLayout(gl);
+		setLayout(new GridBagLayout());
 
 		cannyLowSlider = new JSlider(0, 255, 127);
 		cannyHighSlider = new JSlider(0, 255, 255);
 		bfSigmaColorSlider = new JSlider(0, 255, 150);
 		bfSigmaSpaceSlider = new JSlider(0, 255, 150);
 		epsilonSlider = new JSlider(0, 10, 5);
-		picWidthField = new JTextField("65", 4);
-		picHeightField = new JTextField("65", 4);
-		mergeEpsilonField = new JTextField("1", 2);
+		bilateralFilterBox = new JCheckBox("Use bilateral filter", true);
+		picWidthField = new JTextField("75", 4);
+		picHeightField = new JTextField("75", 4);
+		mergeEpsilonField = new JTextField("0.1", 4);
+		originXField = new JTextField("37.5", 4);
+		originYField = new JTextField("-40", 4);
+		
 		setupControls();
 	}
 	
 	private void setupControls() {
-		JPanel p = new JPanel(new GridLayout(0, 2));
-		p.add(new JLabel("Canny low thres"));
-		p.add(cannyLowSlider);
-		p.add(new JLabel("Canny high thres"));
-		p.add(cannyHighSlider);
-		p.add(new JLabel("Epsilon"));
-		p.add(epsilonSlider);
-		add(p);
+		add(new JLabel("Canny thres (low)"), UIUtil.gridbag(0, 0, 1, 1, 1, 0));
+		add(cannyLowSlider, UIUtil.gridbag(1, 0, 1, 1, 1, 0));
 		
-		p = new JPanel(new GridLayout(0, 2));
-		p.add(new JLabel("sigma_r"));
-		p.add(bfSigmaColorSlider);
-		p.add(new JLabel("sigma_s"));
-		p.add(bfSigmaSpaceSlider);
-		add(p);
+		add(new JLabel("Canny thres (high)"), UIUtil.gridbag(0, 1));
+		add(cannyHighSlider, UIUtil.gridbag(1, 1));
 		
-		JPanel p2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		p2.add(new JLabel("Size"));
-		p2.add(picWidthField);
-		p2.add(new JLabel("x"));
-		p2.add(picHeightField);
-		p2.add(new JLabel("mm"));
-		p.add(p2);
+		add(new JLabel("RDP epsilon"), UIUtil.gridbag(0, 2));
+		add(epsilonSlider, UIUtil.gridbag(1, 2));
 		
-		p2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		p2.add(new JLabel("merge epsilon"));
-		p2.add(mergeEpsilonField);
-		p.add(p2);
+		add(bilateralFilterBox, UIUtil.gridbag(0, 4, 2, 1));
+
+		add(new JLabel("BF sigma color"), UIUtil.gridbag(0, 5));
+		add(bfSigmaColorSlider, UIUtil.gridbag(1, 5));
+		
+		add(new JLabel("BF sigma space"), UIUtil.gridbag(0, 6));
+		add(bfSigmaSpaceSlider, UIUtil.gridbag(1, 6));
+		
+		add(new JLabel("Drawing size"), UIUtil.gridbag(2, 0, 1, 1, 1, 0));
+		JPanel jp = new JPanel();
+		jp.add(picWidthField);
+		jp.add(new JLabel("x"));
+		jp.add(picHeightField);
+		jp.add(new JLabel("mm"));
+		add(jp, UIUtil.gridbag(3, 0, 1, 1, 1, 0));
+		
+		add(new JLabel("Origin"), UIUtil.gridbag(2, 1));
+		jp = new JPanel();
+		jp.add(originXField);
+		jp.add(new JLabel(", "));
+		jp.add(originYField);
+		jp.add(new JLabel("mm"));
+		add(jp, UIUtil.gridbag(3, 1));
+
+		add(new JLabel("Merge epsilon"), UIUtil.gridbag(2, 2));
+		jp = new JPanel();
+		jp.add(mergeEpsilonField);
+		jp.add(new JLabel("mm"));
+		add(jp, UIUtil.gridbag(3, 2));
 	}
 	
 	public void onOptionsChanged(Consumer<SiipalointiOptions> c) {
@@ -75,6 +89,7 @@ public class SiipalointiOptions extends JComponent {
 		bfSigmaColorSlider.addChangeListener(cl);
 		bfSigmaSpaceSlider.addChangeListener(cl);
 		epsilonSlider.addChangeListener(cl);
+		bilateralFilterBox.addChangeListener(cl);
 	}
 	
 	public int getCannyLowThres() {
@@ -83,6 +98,10 @@ public class SiipalointiOptions extends JComponent {
 	
 	public int getCannyHighThres() {
 		return cannyHighSlider.getValue();
+	}
+	
+	public boolean getUseBilateralFilter() {
+		return bilateralFilterBox.isSelected();
 	}
 	
 	public int getBFSigmaColor() {
@@ -97,21 +116,29 @@ public class SiipalointiOptions extends JComponent {
 		return epsilonSlider.getValue();
 	}
 	
-	public int getPictureWidth() {
-		return intValue(picWidthField);
+	public double getPictureWidth() {
+		return doubleValue(picWidthField);
 	}
 	
-	public int getPictureHeight() {
-		return intValue(picHeightField);
+	public double getPictureHeight() {
+		return doubleValue(picHeightField);
 	}
 	
-	public int getMergeEpsilon() {
-		return intValue(mergeEpsilonField);
+	public double getMergeEpsilon() {
+		return doubleValue(mergeEpsilonField);
 	}
 	
-	private int intValue(JTextField field) {
+	public double getOriginX() {
+		return doubleValue(originXField);
+	}
+	
+	public double getOriginY() {
+		return doubleValue(originYField);
+	}
+	
+	private double doubleValue(JTextField field) {
 		try {
-			return Integer.parseInt(field.getText());
+			return Double.parseDouble(field.getText());
 		} catch(NumberFormatException e) {
 			return -1;
 		}

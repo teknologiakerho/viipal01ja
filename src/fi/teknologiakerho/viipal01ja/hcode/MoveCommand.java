@@ -2,7 +2,7 @@ package fi.teknologiakerho.viipal01ja.hcode;
 
 public class MoveCommand extends PositionCommand {
 	
-	public MoveCommand(int x, int y) {
+	public MoveCommand(double x, double y) {
 		super(x, y);
 	}
 
